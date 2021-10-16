@@ -27,7 +27,7 @@ int clockState;
 
 void setup() {
   pinMode(CpuPowerBit, OUTPUT);
-  digitalWrite(CpuPowerBit, LOW);
+  cpu(false);
   
   for( int i=0; i<ARRAY_SIZE(DataBits); ++i )
     pinMode(DataBits[i], INPUT);
@@ -52,9 +52,9 @@ void setup() {
   clockState = HIGH;
   pinMode(ClockBit, OUTPUT);
   digitalWrite(ClockBit, clockState);
-  
+
   pinMode(ResetBit, OUTPUT);
-  digitalWrite(ResetBit, LOW);
+  reset(LOW);
 
   Serial.begin(115200);
 
@@ -99,7 +99,9 @@ void dumpBus() {
   printf("\n");
 }
 
+bool resetState;
 void reset(int value) {
+  resetState = !value;
   printf("Reset %s\n", value ? "HIGH" : "LOW");
   digitalWrite(ResetBit, value);
 }
@@ -109,9 +111,11 @@ void ready(int value) {
   digitalWrite(ReadyOutBit, value);
 }
 
+bool cpuState = false;
 void cpu(bool value) {
   printf("CPU power %s\n", value ? "on" : "off");
-  digitalWrite(CpuPowerBit, value);
+  cpuState = value;
+  digitalWrite(CpuPowerBit, cpuState);
 }
 
 void loop() {
@@ -129,9 +133,19 @@ void loop() {
     cpu(false);
     break;
   case 's': // Single step
+    if( resetState || !cpuState ) {
+      printf("Can't single step when CPU is off or in reset\n");
+      return;
+    }
+    do {
+      halfAdvanceClock();
+    } while( !digitalRead(SyncBit) );
     break;
   case 'c': // Single clock
     advanceClock();
+    break;
+  case 'C': // Half a clock
+    halfAdvanceClock();
     break;
   case 'r': // Reset high (off)
     reset(HIGH);
@@ -145,6 +159,7 @@ void loop() {
 
 void halfAdvanceClock() {
   clockState = !clockState;
+  delay(1);
   digitalWrite(ClockBit, clockState);
   dumpBus();
 
