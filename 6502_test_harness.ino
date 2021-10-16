@@ -25,17 +25,33 @@ static const int CpuPowerBit = 51;
 size_t cycleNum;
 int clockState;
 
+enum class IoState { Input, Read, Write } ioState;
+void resetIo(IoState state) {
+  if( ioState==state )
+    return;
+
+  digitalWrite(ClockBit, LOW); // Disable memory
+  for( int i=0; i<ARRAY_SIZE(DataBits); ++i )
+    pinMode(DataBits[i], state==IoState::Write ? OUTPUT : INPUT);
+
+  for( int i=0; i<ARRAY_SIZE(AddressBits); ++i )
+    pinMode(AddressBits[i], state==IoState::Input ? INPUT : OUTPUT);
+
+  pinMode(RwBit, state==IoState::Input ? INPUT : OUTPUT);
+
+  digitalWrite(ClockBit, clockState);
+  ioState = state;
+}
+
 void setup() {
+  Serial.begin(115200);
+
   pinMode(CpuPowerBit, OUTPUT);
   cpu(false);
   
-  for( int i=0; i<ARRAY_SIZE(DataBits); ++i )
-    pinMode(DataBits[i], INPUT);
-
-  for( int i=0; i<ARRAY_SIZE(AddressBits); ++i )
-    pinMode(AddressBits[i], INPUT);
-
-  pinMode(RwBit, INPUT);
+  ioState = IoState::Write;
+  resetIo( IoState::Input );
+  
   pinMode(SyncBit, INPUT);
   pinMode(ReadyInBit, INPUT);
   pinMode(VectorPullBit, INPUT);
@@ -56,12 +72,7 @@ void setup() {
   pinMode(ResetBit, OUTPUT);
   reset(LOW);
 
-  Serial.begin(115200);
-
   cycleNum = 0;
-}
-
-void resetIo() {
 }
 
 unsigned collectBits( const int bits[], size_t numBits ) {
@@ -153,11 +164,19 @@ void loop() {
   case 'R': // Reset low (on)
     reset(LOW);
     break;
+  case 'm': // Memory read
+    memoryReadCommand(commandLine);
+    break;
+  case 'M': // Memory write
+    memoryWriteCommand(commandLine);
+    break;
   }
   
 }
 
 void halfAdvanceClock() {
+  resetIo( IoState::Input );
+  
   clockState = !clockState;
   delay(1);
   digitalWrite(ClockBit, clockState);
@@ -171,6 +190,82 @@ void advanceClock() {
   do {
     halfAdvanceClock();
   } while( clockState==LOW );
+}
+
+void memoryReadCommand(const char *commandLine) {
+  uint16_t address;
+  size_t index=1;
+  jmp_buf errorBuf;
+
+  if( setjmp(errorBuf)==0 ) {
+    parseFixedChar( commandLine, index, ' ', errorBuf );
+    address = parseFixedHex( commandLine, index, 4, errorBuf );
+    parseVerifyEnd( commandLine, index, errorBuf );
+  } else {
+    printf("Memory read format: \"m fded\"\n");
+    return;
+  }
+
+  if( cpuState ) {
+    printf("Cannot access memory directly when CPU is on\n");
+    return;
+  }
+
+  resetIo( IoState::Read );
+  digitalWrite(ClockBit, HIGH); // Enable memory
+  uint16_t mask=1;
+  for( int i=0; i<ARRAY_SIZE(AddressBits); ++i ) {
+    digitalWrite(AddressBits[i], address & mask);
+    mask <<= 1;
+  }
+
+  printf("%04x: %02x\n", address, COLLECT(DataBits));
+  delay(1000);
+}
+
+void memoryWriteCommand(const char *commandLine) {
+  uint16_t address;
+  byte data;
+  size_t index=1;
+  jmp_buf errorBuf;
+
+  if( setjmp(errorBuf)==0 ) {
+    parseFixedChar( commandLine, index, ' ', errorBuf );
+    address = parseFixedHex( commandLine, index, 4, errorBuf );
+    parseFixedChar( commandLine, index, ',', errorBuf );
+    data = parseFixedHex( commandLine, index, 2, errorBuf );
+    parseVerifyEnd( commandLine, index, errorBuf );
+  } else {
+    printf("Memory read format: \"M fded,4d\"\n");
+    return;
+  }
+
+  if( cpuState ) {
+    printf("Cannot access memory directly when CPU is on\n");
+    return;
+  }
+
+  resetIo( IoState::Write );
+
+  uint16_t mask=1;
+  for( int i=0; i<ARRAY_SIZE(AddressBits); ++i ) {
+    digitalWrite(AddressBits[i], address & mask);
+    mask <<= 1;
+  }
+
+  mask=1;
+  for( int i=0; i<ARRAY_SIZE(DataBits); ++i ) {
+    digitalWrite(DataBits[i], data & mask);
+    mask <<= 1;
+  }
+  
+  digitalWrite(RwBit, LOW); // Enable write
+  digitalWrite(ClockBit, HIGH); // Enable memory
+  
+  printf("Written %02x to %04x\n", data, address);
+  delay(1000);
+  
+  digitalWrite(RwBit, HIGH); // Disable write
 }
 
 static const char CRLF[]="\r\n";
@@ -209,6 +304,9 @@ size_t parseFixedHex( const char *buffer, size_t &index, size_t numDigits, jmp_b
       ch -= '0';
     } else if(ch>='A' and ch<='F') {
       ch -= 'A';
+      ch += 10;
+    } else if(ch>='a' and ch<='f') {
+      ch -= 'a';
       ch += 10;
     } else {
       longjmp(errorEnv, 1);
