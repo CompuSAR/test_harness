@@ -1,3 +1,5 @@
+#include <setjmp.h>
+
                                // 0, 1, 2, 3, 4, 5, 6, 7
 static const int DataBits[8] = { 2, 3, 4, 5, 6, 7, 8, 9 };
                                    //  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15
@@ -89,8 +91,10 @@ void dumpBus() {
     printf(" SYNC");
   if( !digitalRead(ReadyInBit) )
     printf(" WAIT");
+  /*
   if( !digitalRead(VectorPullBit) )
     printf(" VectorPull");
+  */
 
   printf("\n");
 }
@@ -104,33 +108,109 @@ void ready(int value) {
   printf("Ready %s\n", value ? "HIGH" : "LOW");
   digitalWrite(ReadyOutBit, value);
 }
+
+void cpu(bool value) {
+  printf("CPU power %s\n", value ? "on" : "off");
+  digitalWrite(CpuPowerBit, value);
+}
+
 void loop() {
-  if( cycleNum==10 ) {
-    printf("Power on\n");
-    digitalWrite(CpuPowerBit, HIGH);
-  }
-    
-  if( cycleNum==15 ) {
+#define BUFFER_SIZE 120
+  char commandLine[BUFFER_SIZE];
+  int numBytes = readLine(commandLine, BUFFER_SIZE);
+  if( numBytes==0 )
+    return;
+
+  switch(commandLine[0]) {
+  case 'p': // Power on the CPU
+    cpu(true);
+    break;
+  case 'P': // Power off the CPU
+    cpu(false);
+    break;
+  case 's': // Single step
+    break;
+  case 'c': // Single clock
+    advanceClock();
+    break;
+  case 'r': // Reset high (off)
     reset(HIGH);
+    break;
+  case 'R': // Reset low (on)
+    reset(LOW);
+    break;
   }
+  
+}
 
-  /*
-  if( cycleNum==20 )
-    digitalWrite(ResetBit, LOW);
-  if( cycleNum==25 )
-    digitalWrite(ResetBit, HIGH);
-  */
-
-  if( cycleNum==35 )
-    ready(LOW);
-  if( cycleNum==45 )
-    ready(HIGH);
-
+void halfAdvanceClock() {
   clockState = !clockState;
   digitalWrite(ClockBit, clockState);
-  delay(500);
   dumpBus();
 
   if( clockState )
     cycleNum++;
+}
+
+void advanceClock() {
+  do {
+    halfAdvanceClock();
+  } while( clockState==LOW );
+}
+
+static const char CRLF[]="\r\n";
+
+size_t readLine(char *buffer, size_t bufferSize) {
+  size_t len=0;
+
+  while( len<bufferSize ) {
+    if( Serial.available() ) {
+      int ch = Serial.read();
+      if( ch<0 )
+        continue;
+
+      if( ch=='\n' || ch=='\r' ) {
+        Serial.write(CRLF);
+        buffer[len]='\0';
+        return len;
+      } else {
+        Serial.write(ch);
+        buffer[len++] = ch;
+      }
+    }
+  }
+
+  Serial.write("\r\nLine overflow\r\n");
+  return 0;
+}
+
+size_t parseFixedHex( const char *buffer, size_t &index, size_t numDigits, jmp_buf errorEnv ) {
+  size_t result = 0;
+
+  for( unsigned i=0; i<numDigits; ++i ) {
+    char ch = buffer[index++];
+
+    if( (ch>='0' and ch<='9') ) {
+      ch -= '0';
+    } else if(ch>='A' and ch<='F') {
+      ch -= 'A';
+      ch += 10;
+    } else {
+      longjmp(errorEnv, 1);
+    }
+
+    result *= 16;
+    result += ch;
+  }
+
+  return result;
+}
+
+void parseFixedChar( const char *buffer, size_t &index, char expected, jmp_buf errorEnv ) {
+  if( buffer[index++] != expected )
+    longjmp(errorEnv, 1);
+}
+
+void parseVerifyEnd( const char *buffer, size_t &index, jmp_buf errorEnv ) {
+  parseFixedChar( buffer, index, '\0', errorEnv );
 }
