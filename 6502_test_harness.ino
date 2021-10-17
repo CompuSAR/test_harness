@@ -30,7 +30,10 @@ void resetIo(IoState state) {
   if( ioState==state )
     return;
 
-  digitalWrite(ClockBit, LOW); // Disable memory
+  bus( state==IoState::Input );
+
+  if( ioState!=IoState::Input )
+    digitalWrite(ClockBit, LOW); // Disable memory
   for( int i=0; i<ARRAY_SIZE(DataBits); ++i )
     pinMode(DataBits[i], state==IoState::Write ? OUTPUT : INPUT);
 
@@ -39,13 +42,19 @@ void resetIo(IoState state) {
 
   pinMode(RwBit, state==IoState::Input ? INPUT : OUTPUT);
 
-  digitalWrite(ClockBit, clockState);
+  if( state==IoState::Input )
+    digitalWrite(ClockBit, clockState);
+
   ioState = state;
 }
 
 void setup() {
   Serial.begin(115200);
 
+  pinMode(RwBit, OUTPUT);
+  digitalWrite(RwBit, HIGH); // Disable write
+
+  pinMode(BusEnableBit, OUTPUT);
   pinMode(CpuPowerBit, OUTPUT);
   cpu(false);
   
@@ -62,8 +71,6 @@ void setup() {
   digitalWrite(NmiBit, HIGH);
   pinMode(IrqBit, OUTPUT);
   digitalWrite(IrqBit, HIGH);
-  pinMode(BusEnableBit, OUTPUT);
-  digitalWrite(BusEnableBit, HIGH);
 
   clockState = HIGH;
   pinMode(ClockBit, OUTPUT);
@@ -73,6 +80,11 @@ void setup() {
   reset(LOW);
 
   cycleNum = 0;
+}
+
+void bus(bool value) {
+    digitalWrite(BusEnableBit, value);
+    printf("Bus %s\n", value ? "enabled" : "disabled");
 }
 
 unsigned collectBits( const int bits[], size_t numBits ) {
@@ -126,6 +138,7 @@ bool cpuState = false;
 void cpu(bool value) {
   printf("CPU power %s\n", value ? "on" : "off");
   cpuState = value;
+  resetIo( IoState::Input );
   digitalWrite(CpuPowerBit, cpuState);
 }
 
@@ -170,6 +183,16 @@ void loop() {
   case 'M': // Memory write
     memoryWriteCommand(commandLine);
     break;
+  case 'b':
+    bus(true);
+    break;
+  case 'B':
+    bus(false);
+    break;
+  case 'd':
+    resetIo( IoState::Input );
+    dumpBus();
+    break;
   }
   
 }
@@ -206,21 +229,16 @@ void memoryReadCommand(const char *commandLine) {
     return;
   }
 
-  if( cpuState ) {
-    printf("Cannot access memory directly when CPU is on\n");
-    return;
-  }
-
   resetIo( IoState::Read );
+  digitalWrite(RwBit, HIGH); // Disable write
   digitalWrite(ClockBit, HIGH); // Enable memory
   uint16_t mask=1;
   for( int i=0; i<ARRAY_SIZE(AddressBits); ++i ) {
-    digitalWrite(AddressBits[i], address & mask);
+    digitalWrite(AddressBits[i], (address & mask)!=0);
     mask <<= 1;
   }
 
   printf("%04x: %02x\n", address, COLLECT(DataBits));
-  delay(1000);
 }
 
 void memoryWriteCommand(const char *commandLine) {
@@ -240,22 +258,17 @@ void memoryWriteCommand(const char *commandLine) {
     return;
   }
 
-  if( cpuState ) {
-    printf("Cannot access memory directly when CPU is on\n");
-    return;
-  }
-
   resetIo( IoState::Write );
 
   uint16_t mask=1;
   for( int i=0; i<ARRAY_SIZE(AddressBits); ++i ) {
-    digitalWrite(AddressBits[i], address & mask);
+    digitalWrite(AddressBits[i], (address & mask)!=0);
     mask <<= 1;
   }
 
   mask=1;
   for( int i=0; i<ARRAY_SIZE(DataBits); ++i ) {
-    digitalWrite(DataBits[i], data & mask);
+    digitalWrite(DataBits[i], (data & mask)!=0);
     mask <<= 1;
   }
   
