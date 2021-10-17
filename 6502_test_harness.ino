@@ -18,6 +18,8 @@ static const int ClockBit = 48;
 static const int ResetBit = 49;
 static const int CpuPowerBit = 51;
 
+#include "operations.h"
+
 #include <LibPrintf.h>
 
 #define ARRAY_SIZE(a) (sizeof(a)/sizeof(*(a+1)))
@@ -100,10 +102,16 @@ unsigned collectBits( const int bits[], size_t numBits ) {
 #define COLLECT(a) (collectBits(a, ARRAY_SIZE(a)))
 void dumpBus() {
   printf("%d: A:%04x ", cycleNum, COLLECT(AddressBits));
-  if( clockState )
-    printf("D:%02x", COLLECT(DataBits));
-  else
+  if( clockState ) {
+    byte data = COLLECT(DataBits);
+    printf("D:%02x", data);
+
+    if( digitalRead(SyncBit) ) {
+      printf(" %s %s", OperationNames[ (int)opcodes[data].op ], AddressingModeNames[ (int)opcodes[data].mode ]);
+    }
+  } else {
     printf("D:--");
+  }
   
   if( digitalRead(RwBit) )
     printf(" Read ");
