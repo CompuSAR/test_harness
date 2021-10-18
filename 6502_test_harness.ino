@@ -128,6 +128,8 @@ void dumpBus() {
     printf(" WAIT");
   if( !digitalRead(VectorPullBit) )
     printf(" VectorPull");
+  if( !digitalRead(RMWBit) )
+    printf(" ReadModifyWrite");
 
   printf("\n");
 }
