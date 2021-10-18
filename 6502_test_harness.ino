@@ -126,10 +126,8 @@ void dumpBus() {
     printf(" SYNC");
   if( !digitalRead(ReadyInBit) )
     printf(" WAIT");
-  /*
   if( !digitalRead(VectorPullBit) )
     printf(" VectorPull");
-  */
 
   printf("\n");
 }
