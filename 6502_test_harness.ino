@@ -14,6 +14,7 @@ static const int ReadyOutBit = 43;
 static const int NmiBit = 44;
 static const int IrqBit = 45;
 static const int BusEnableBit = 46;
+static const int RamEnableBit = 47;
 static const int ClockBit = 48;
 static const int ResetBit = 49;
 static const int CpuPowerBit = 51;
@@ -35,7 +36,7 @@ void resetIo(IoState state) {
   bus( state==IoState::Input );
 
   if( ioState!=IoState::Input )
-    digitalWrite(ClockBit, LOW); // Disable memory
+    digitalWrite(RamEnableBit, LOW); // Disable memory
   for( int i=0; i<ARRAY_SIZE(DataBits); ++i )
     pinMode(DataBits[i], state==IoState::Write ? OUTPUT : INPUT);
 
@@ -45,7 +46,7 @@ void resetIo(IoState state) {
   pinMode(RwBit, state==IoState::Input ? INPUT : OUTPUT);
 
   if( state==IoState::Input )
-    digitalWrite(ClockBit, clockState);
+    digitalWrite(RamEnableBit, LOW); // Enable memory
 
   ioState = state;
 }
@@ -58,7 +59,7 @@ void setup() {
 
   pinMode(BusEnableBit, OUTPUT);
   pinMode(CpuPowerBit, OUTPUT);
-  cpu(false);
+  cpu(true);
   
   ioState = IoState::Write;
   resetIo( IoState::Input );
@@ -79,7 +80,10 @@ void setup() {
   digitalWrite(ClockBit, clockState);
 
   pinMode(ResetBit, OUTPUT);
-  reset(LOW);
+  reset(HIGH);
+
+  pinMode(RamEnableBit, OUTPUT);
+  digitalWrite(RamEnableBit, LOW);
 
   cycleNum = 0;
 }
@@ -239,7 +243,7 @@ void memoryReadCommand(const char *commandLine) {
 
   resetIo( IoState::Read );
   digitalWrite(RwBit, HIGH); // Disable write
-  digitalWrite(ClockBit, HIGH); // Enable memory
+  digitalWrite(RamEnableBit, LOW); // Enable memory
   uint16_t mask=1;
   for( int i=0; i<ARRAY_SIZE(AddressBits); ++i ) {
     digitalWrite(AddressBits[i], (address & mask)!=0);
@@ -266,6 +270,11 @@ void memoryWriteCommand(const char *commandLine) {
     return;
   }
 
+  if( clockState==LOW ) {
+    printf("Can't write to memory when the clock is low\n");
+    return;
+  }
+
   resetIo( IoState::Write );
 
   uint16_t mask=1;
@@ -281,10 +290,8 @@ void memoryWriteCommand(const char *commandLine) {
   }
   
   digitalWrite(RwBit, LOW); // Enable write
-  digitalWrite(ClockBit, HIGH); // Enable memory
   
   printf("Written %02x to %04x\n", data, address);
-  delay(1000);
   
   digitalWrite(RwBit, HIGH); // Disable write
 }
