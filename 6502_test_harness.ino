@@ -111,7 +111,7 @@ void dumpBus() {
     printf("D:%02x", data);
 
     if( digitalRead(SyncBit) ) {
-      printf(" %s %s", OperationNames[ (int)opcodes[data].op ], AddressingModeNames[ (int)opcodes[data].mode ]);
+      printf(" \"%s%s\"", OperationNames[ (int)opcodes[data].op ], AddressingModeNames[ (int)opcodes[data].mode ]);
     }
   } else {
     printf("D:--");
@@ -169,13 +169,12 @@ void loop() {
     cpu(false);
     break;
   case 's': // Single step
-    if( resetState || !cpuState ) {
-      printf("Can't single step when CPU is off or in reset\n");
-      return;
+    {
+      int i=0;
+      do {
+        halfAdvanceClock();
+      } while( clockState==LOW || (++i<20 && !digitalRead(SyncBit)) );
     }
-    do {
-      halfAdvanceClock();
-    } while( !digitalRead(SyncBit) );
     break;
   case 'c': // Single clock
     advanceClock();

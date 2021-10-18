@@ -152,7 +152,7 @@ enum class AddressingMode {
 };
 
 const char *AddressingModeNames[] = {
-  "", "abs", "(abs,x)", "abs,x", "abs,y", "(abs)", "A", "#Immediate", "", "pc+rel", "stack", "zp", "(zp,x)", "zp,x", "zp,y", "(zp)", "(zp),y"  
+  "", " abs", " (abs,x)", " abs,x", " abs,y", " (abs)", " A", " #Immediate", " ", " pc+rel", " stack", " zp", " (zp,x)", " zp,x", " zp,y", " (zp)", " (zp),y"  
 };
 
 const struct { Operation op; AddressingMode mode; } opcodes[] = {
