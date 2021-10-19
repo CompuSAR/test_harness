@@ -178,6 +178,18 @@ void loop() {
     resetIo( IoState::Input );
     dumpBus();
     break;
+  case 'i': // IRQ
+    digitalWrite( IrqBit, HIGH );
+    break;
+  case 'I':
+    digitalWrite( IrqBit, LOW );
+    break;
+  case 'n': // NMI
+    digitalWrite( NmiBit, HIGH );
+    break;
+  case 'N':
+    digitalWrite( NmiBit, LOW );
+    break;
   case 'm': // Memory read
     memoryReadCommand(commandLine);
     break;
