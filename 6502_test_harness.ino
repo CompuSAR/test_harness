@@ -162,11 +162,39 @@ void loop() {
     return;
 
   switch(commandLine[0]) {
+  case 'b':
+    bus(true);
+    break;
+  case 'B':
+    bus(false);
+    break;
+  case 'c': // Single clock
+    advanceClock();
+    break;
+  case 'C': // Half a clock
+    halfAdvanceClock();
+    break;
+  case 'd':
+    resetIo( IoState::Input );
+    dumpBus();
+    break;
+  case 'm': // Memory read
+    memoryReadCommand(commandLine);
+    break;
+  case 'M': // Memory write
+    memoryWriteCommand(commandLine);
+    break;
   case 'p': // Power on the CPU
     cpu(true);
     break;
   case 'P': // Power off the CPU
     cpu(false);
+    break;
+  case 'r': // Reset high (off)
+    reset(HIGH);
+    break;
+  case 'R': // Reset low (on)
+    reset(LOW);
     break;
   case 's': // Single step
     {
@@ -175,34 +203,6 @@ void loop() {
         halfAdvanceClock();
       } while( clockState==LOW || (++i<20 && !digitalRead(SyncBit)) );
     }
-    break;
-  case 'c': // Single clock
-    advanceClock();
-    break;
-  case 'C': // Half a clock
-    halfAdvanceClock();
-    break;
-  case 'r': // Reset high (off)
-    reset(HIGH);
-    break;
-  case 'R': // Reset low (on)
-    reset(LOW);
-    break;
-  case 'm': // Memory read
-    memoryReadCommand(commandLine);
-    break;
-  case 'M': // Memory write
-    memoryWriteCommand(commandLine);
-    break;
-  case 'b':
-    bus(true);
-    break;
-  case 'B':
-    bus(false);
-    break;
-  case 'd':
-    resetIo( IoState::Input );
-    dumpBus();
     break;
   }
   
