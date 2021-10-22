@@ -299,11 +299,13 @@ void memoryWriteCommand(const char *commandLine) {
     digitalWrite(DataBits[i], (data & mask)!=0);
     mask <<= 1;
   }
-  
+
   digitalWrite(RwBit, LOW); // Enable write
-  
+  digitalWrite(RamEnableBit, LOW); // Enable memory
+
   printf("Written %02x to %04x\n", data, address);
-  
+
+  digitalWrite(RamEnableBit, HIGH); // Disable memory
   digitalWrite(RwBit, HIGH); // Disable write
 }
 
