@@ -1,9 +1,9 @@
 #include <setjmp.h>
 
-                               // 0, 1, 2, 3, 4, 5, 6, 7
-static const int DataBits[8] = { 2, 3, 4, 5, 6, 7, 8, 9 };
-                                   //  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15
-static const int AddressBits[16] = { 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 32, 33, 34, 35, 36, 37 };
+                              //  0,  1,  2,  3,  4,  5,  6,  7
+static const int DataBits[8] = {  4,  5,  6,  7,  8,  9, 10, 11 };
+                                  //  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15
+static const int AddressBits[16] = { 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 32, 33, 34, 35, 36, 37 };
 static const int RwBit = 38;
 static const int SyncBit = 39;
 static const int RMWBit = 40;
@@ -60,14 +60,14 @@ void setup() {
   pinMode(BusEnableBit, OUTPUT);
   pinMode(CpuPowerBit, OUTPUT);
   cpu(true);
-  
+
   ioState = IoState::Write;
   resetIo( IoState::Input );
-  
+
   pinMode(SyncBit, INPUT);
   pinMode(ReadyInBit, INPUT);
   pinMode(VectorPullBit, INPUT);
-  
+
   pinMode(ReadyOutBit, OUTPUT);
   digitalWrite(ReadyOutBit, HIGH);
   pinMode(NmiBit, OUTPUT);
@@ -116,7 +116,7 @@ void dumpBus() {
   } else {
     printf("D:--");
   }
-  
+
   if( digitalRead(RwBit) )
     printf(" Read ");
   else
@@ -217,12 +217,12 @@ void loop() {
     }
     break;
   }
-  
+
 }
 
 void halfAdvanceClock() {
   resetIo( IoState::Input );
-  
+
   clockState = !clockState;
   delay(1);
   digitalWrite(ClockBit, clockState);
