@@ -180,15 +180,19 @@ void loop() {
     break;
   case 'i': // IRQ
     digitalWrite( IrqBit, HIGH );
+    printf("IRQ high\n");
     break;
   case 'I':
     digitalWrite( IrqBit, LOW );
+    printf("IRQ low\n");
     break;
   case 'n': // NMI
     digitalWrite( NmiBit, HIGH );
+    printf("NMI high\n");
     break;
   case 'N':
     digitalWrite( NmiBit, LOW );
+    printf("NMI low\n");
     break;
   case 'm': // Memory read
     memoryReadCommand(commandLine);
