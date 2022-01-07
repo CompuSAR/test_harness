@@ -154,6 +154,21 @@ void cpu(bool value) {
   digitalWrite(CpuPowerBit, cpuState);
 }
 
+static const char HELP_MSG[] =
+"Command summary\n"
+"B/b        Bus enable(b) disable(B)\n"
+"C/c        Perform half(C) or full(c) clock cycle\n"
+"d          Dump current bus state\n"
+"I/i        Set the IRQ input low(I) or high(i)\n"
+"N/n        Set the NMI input low(N) or high(n)\n"
+"m aaaa     Read memory location from hex address aaaa\n"
+"M aaaa,dd  Write hex value dd to address aaaa\n"
+"P/p        Power the CPU off(P) or on(p) - not connected\n"
+"R/r        Set reset line low(R) or high(r)\n"
+"s          Single step\n"
+"h/?        Print this message\n"
+;
+
 void loop() {
 #define BUFFER_SIZE 120
   char commandLine[BUFFER_SIZE];
@@ -220,6 +235,9 @@ void loop() {
       } while( clockState==LOW || (++i<20 && !digitalRead(SyncBit)) );
     }
     break;
+  case 'h': // Help
+  case '?':
+    printHelp();
   }
 
 }
@@ -281,7 +299,7 @@ void memoryWriteCommand(const char *commandLine) {
     data = parseFixedHex( commandLine, index, 2, errorBuf );
     parseVerifyEnd( commandLine, index, errorBuf );
   } else {
-    printf("Memory read format: \"M fded,4d\"\n");
+    printf("Memory write format: \"M fded,4d\"\n");
     return;
   }
 
@@ -371,4 +389,8 @@ void parseFixedChar( const char *buffer, size_t &index, char expected, jmp_buf e
 
 void parseVerifyEnd( const char *buffer, size_t &index, jmp_buf errorEnv ) {
   parseFixedChar( buffer, index, '\0', errorEnv );
+}
+
+void printHelp() {
+  Serial.write(HELP_MSG);
 }
