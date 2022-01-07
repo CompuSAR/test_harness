@@ -1,0 +1,18 @@
+#!/usr/bin/python3
+
+import argparse
+
+from mem_file import MemFile
+
+parser = argparse.ArgumentParser(
+        description="Run 6502 test plan on the test harness")
+parser.add_argument('memory_file', type=open, help="File describing initial memory layout")
+parser.add_argument('test_plan_file', type=open, help="File describing expected test progression")
+
+
+args = parser.parse_args()
+
+m = MemFile(args.memory_file)
+
+for line in m:
+    print(line)
