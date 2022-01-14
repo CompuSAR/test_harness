@@ -1,16 +1,29 @@
 #!/usr/bin/python3
 
 import argparse
+import serial.tools.list_ports
 
 from mem_file import MemFile
+from test_harness import TestHarness
 
 parser = argparse.ArgumentParser(
         description="Run 6502 test plan on the test harness")
 parser.add_argument('memory_file', type=open, help="File describing initial memory layout")
 parser.add_argument('test_plan_file', type=open, help="File describing expected test progression")
+parser.add_argument('-p', '--port', help="The serial port to use. By default, use the first one located")
 
 
 args = parser.parse_args()
+
+if args.port is None:
+    comports = serial.tools.list_ports.comports()
+    if len(comports)==0:
+        exit_error("No serial ports found on system")
+
+    args.port = comports[0].device
+
+
+test_harness = TestHarness(args.port)
 
 m = MemFile(args.memory_file)
 
