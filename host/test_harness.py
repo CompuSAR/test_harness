@@ -2,6 +2,8 @@ import re
 import serial
 import time
 
+from typing import Optional
+
 
 class TestHarness:
     """
@@ -25,8 +27,8 @@ class TestHarness:
         print("> d")
         self.port.write(b"d\n")
         while line != "d":
-            line = self._get_line()
-        self._get_line() # status result
+            line = self.get_line()
+        self.get_line() # status result
         print("Open")
 
     def hard_reset(self) -> None:
@@ -40,7 +42,7 @@ class TestHarness:
     def send_command(self, command_line: str) -> None:
         print(f"> {command_line}")
         self.port.write(f"{command_line}\n".encode())
-        echo = self._get_line()
+        echo = self.get_line()
         assert echo==command_line, "Mismatch between command sent and echo received"
 
     def read_memory(self, address: int) -> int:
@@ -76,15 +78,17 @@ class TestHarness:
         assert int(parsed['address'], 16) == address
         assert int(parsed['data'], 16) == data
 
-    def _wait_reply(self, expression: str) -> re.Match:
-        while True:
-            answer: str = self._get_line()
-            parsed = re.match(expression, answer, re.X)
+    def cycle(self) -> str:
+        self.send_command('c')
+        self.get_status()
+        self.get_status()
 
-            if parsed:
-                return parsed
+    def get_line(self) -> str:
+        """
+        Reads a single line of response from the CPU.
 
-    def _get_line(self) -> str:
+        If no line is received within timeout, raises a SerialTimeoutException
+        """
         line = self.port.read_until()
         if not line:
             raise serial.SerialTimeoutException()
@@ -93,3 +97,24 @@ class TestHarness:
         print(f"< {line}")
 
         return line
+
+    def get_status(self) -> Optional[tuple]:
+        self._wait_reply(
+                r'''
+                ^
+                (?P<cycle> [0-9]+) :\s
+                A: (?P<address> [0-9a-fA-F]{4}) \s
+                D: ( (?P<data> [0-9a-fA-F]{2}) | -- ) \s
+                ( (?P<opcode> " [^"]+ ") \s )?
+                ( (?P<read> Read) | (?P<write> Write) )
+                (?P<flags> .*)
+                $
+                ''')
+
+    def _wait_reply(self, expression: str) -> re.Match:
+        while True:
+            answer: str = self.get_line()
+            parsed = re.match(expression, answer, re.X)
+
+            if parsed:
+                return parsed

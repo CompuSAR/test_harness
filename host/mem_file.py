@@ -12,8 +12,9 @@ class MemFile:
             """,
             re.VERBOSE)
 
-    def __init__(self, file_handle, *, name: str = ""):
+    def __init__(self, file_handle, *, name: str = "", num_digits: int):
         self._file_handle = file_handle
+        self._num_digits = num_digits
 
     def __del__(self):
         self._file_handle.close()

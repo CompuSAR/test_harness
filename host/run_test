@@ -2,6 +2,7 @@
 
 import argparse
 import serial.tools.list_ports
+import time
 
 from mem_file import MemFile
 from test_harness import TestHarness
@@ -25,7 +26,15 @@ if args.port is None:
 
 test_harness = TestHarness(args.port)
 
-m = MemFile(args.memory_file)
+m = MemFile(args.memory_file, name="Memory", num_digits=2)
 
 for line in m:
-    print(line)
+    assert len(line[1])==2, f"Address {line[0]}: data is wrong size: {line[1]}"
+
+    address = line[0]
+    data = line[1][0] + line[1][1]*16
+    test_harness.write_memory( address, data )
+
+while True:
+    test_harness.cycle()
+    time.sleep(0.2)
