@@ -14,8 +14,16 @@ class MemFile:
             ^
             (?P<empty_spaces> \s+) |
             (?P<comment> //.*) |
+            (?P<multiline_comment> /[*]) |
             (@ (?P<address> [0-9a-fA-F]+)) |
             (?P<data> [0-9a-fA-F] [0-9a-fA-F_]*)
+            """,
+            re.VERBOSE)
+    _comment_re = re.compile(
+            r"""
+            ^
+            (?P<body> ([^*] | [*][^/])* )
+            (?P<end> [*]/)?
             """,
             re.VERBOSE)
 
@@ -29,20 +37,35 @@ class MemFile:
     def __iter__(self):
         line_num = 0
         address = 0
+        in_comment = False
 
         for line in self._file_handle:
             line_num += 1
             col_num = 1
 
             while line:
-                parsed = self._parser_re.match(line)
+                if in_comment:
+                    regexp = self._comment_re
+                else:
+                    regexp = self._parser_re
+
+                parsed = regexp.match(line)
                 if parsed is None:
                     raise RuntimeError(f'Failed to parse memory file {self._file_handle.name} at {line_num}:{col_num}')
 
                 line = line[ parsed.span()[1]: ]
                 col_num += parsed.span()[1]-1
 
-                if parsed['address'] is not None:
+                if in_comment:
+                    if parsed['end'] is not None:
+                        in_comment = False
+
+                    continue
+
+                if parsed['multiline_comment'] is not None:
+                    in_comment = True
+
+                elif parsed['address'] is not None:
                     address = int(parsed['address'], 16)
 
                 elif parsed['data'] is not None:
@@ -50,7 +73,7 @@ class MemFile:
 
                     str_data: str = parsed['data']
 
-                    for i in str_data[::-1]:
+                    for i in str_data:
                         if i == '_':
                             continue
 

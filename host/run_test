@@ -26,11 +26,11 @@ if args.port is None:
 
 test_harness = TestHarness(args.port)
 
-mem_file = MemFile(args.memory_file, name="Memory", num_digits=2)
+mem_file = MemFile(args.memory_file, num_digits=2)
 
 for byte in mem_file:
     address = byte[0]
-    data = byte[1][0] + byte[1][1]*16
+    data = byte[1][0]*16 + byte[1][1]
     test_harness.write_memory( address, data )
 
 while True:
