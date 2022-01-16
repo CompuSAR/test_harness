@@ -2,6 +2,13 @@ import re
 
 
 class MemFile:
+    """
+    Reads and parses a Xilinx memory file.
+
+    Parameters:
+    file_handle (input file):   file to read the data from.
+    num_digits (int):           How many digits to expect in each line
+    """
     _parser_re = re.compile(
             r"""
             ^
@@ -48,6 +55,10 @@ class MemFile:
                             continue
 
                         data.append( int(i, 16) )
+
+                    if len(data) != self._num_digits:
+                        raise RuntimeError(
+                                f'Wrong line length at {self._file_handle.name}:{line_num}:{col_num}: Expected {self._num_digits} digits, parsed {len(data)}')
 
                     yield (address, data)
 
