@@ -4,6 +4,12 @@ import argparse
 import serial.tools.list_ports
 import time
 
+from functools import partial
+
+
+import assert_signal
+
+from deferred_actions import DeferredActions
 from mem_file import MemFile
 from test_harness import TestHarness
 
@@ -25,6 +31,28 @@ if args.port is None:
 
 
 test_harness = TestHarness(args.port)
+deferred_actions = DeferredActions()
+
+def do_op(plan: list[int]) -> None:
+
+def do_bus_op(plan: list[int]) -> None:
+
+def do_assert_signal(plan: list[int]) -> None:
+    assert_sig = assert_signal.AssertSignal(plan)
+
+    if assert_sig.pin == assert_signal.Signals.Reset:
+        deferred_actions.add_action( partial(test_harness.reset, True), assert_sig.cycles_until_on )
+        deferred_actions.add_action( partial(test_harness.reset, False), assert_sig.cycles_until_off )
+    elif assert_sig.pin == assert_signal.Signals.IRQ:
+        deferred_actions.add_action( partial(test_harness.irq, True), assert_sig.cycles_until_on )
+        deferred_actions.add_action( partial(test_harness.irq, False), assert_sig.cycles_until_off )
+    elif assert_sig.pin == assert_signal.Signals.NMI:
+        deferred_actions.add_action( partial(test_harness.nmi, True), assert_sig.cycles_until_on )
+        deferred_actions.add_action( partial(test_harness.nmi, False), assert_sig.cycles_until_off )
+    else:
+        assert False
+
+def do_wait(plan: list[int]) -> None:
 
 mem_file = MemFile(args.memory_file, num_digits=2)
 
@@ -33,6 +61,28 @@ for byte in mem_file:
     data = byte[1][0]*16 + byte[1][1]
     test_harness.write_memory( address, data )
 
-while True:
-    test_harness.cycle()
-    time.sleep(0.1)
+mem_file = None
+
+test_plan_file = MemFile(args.test_plan_file, num_digits=14)
+
+for instruction in test_plan_file:
+    if instruction[1][0]==0:
+        # Operation, ignore output
+        do_op(instruction[1])
+    elif instruction[1][0]==1:
+        # Operation, read
+        do_op(instruction[1])
+    elif instruction[1][0]==2:
+        # Operation, write
+        do_op(instruction[1])
+    elif instruction[1][0]==3:
+        do_assert_signal(instruction[1])
+    elif instruction[1][0]==4:
+        do_bus_op(instruction[1])
+    elif instruction[1][0]==5:
+        do_wait(instruction[1])
+    elif instruction[1][0]==15:
+        print("Test ran to successful completion")
+        break
+    else:
+        assert False, f"Received invalid operation {instruction[1][0]} at line {test_plan_file.line_num}"

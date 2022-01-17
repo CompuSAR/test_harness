@@ -35,13 +35,13 @@ class MemFile:
         self._file_handle.close()
 
     def __iter__(self):
-        line_num = 0
+        self.line_num = 0
         address = 0
         in_comment = False
 
         for line in self._file_handle:
-            line_num += 1
-            col_num = 1
+            self.line_num += 1
+            self.col_num = 1
 
             while line:
                 if in_comment:
@@ -51,10 +51,10 @@ class MemFile:
 
                 parsed = regexp.match(line)
                 if parsed is None:
-                    raise RuntimeError(f'Failed to parse memory file {self._file_handle.name} at {line_num}:{col_num}')
+                    raise RuntimeError(f'Failed to parse memory file {self._file_handle.name} at {self.line_num}:{self.col_num}')
 
                 line = line[ parsed.span()[1]: ]
-                col_num += parsed.span()[1]-1
+                self.col_num += parsed.span()[1]-1
 
                 if in_comment:
                     if parsed['end'] is not None:
@@ -81,8 +81,11 @@ class MemFile:
 
                     if len(data) != self._num_digits:
                         raise RuntimeError(
-                                f'Wrong line length at {self._file_handle.name}:{line_num}:{col_num}: Expected {self._num_digits} digits, parsed {len(data)}')
+                                f'Wrong line length at {self._file_handle.name}:{self.line_num}:{self.col_num}: Expected {self._num_digits} digits, parsed {len(data)}')
 
                     yield (address, data)
 
                     address += 1
+
+        del self.line_num
+        del self.col_num

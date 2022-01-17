@@ -78,6 +78,36 @@ class TestHarness:
         assert int(parsed['address'], 16) == address
         assert int(parsed['data'], 16) == data
 
+    def reset(self, state: bool) -> None:
+        if state:
+            self.send_command("R")
+
+            self._wait_reply("Reset LOW")
+        else:
+            self.send_command("r")
+
+            self._wait_reply("Reset HIGH")
+
+    def irq(self, state: bool) -> None:
+        if state:
+            self.send_command("I")
+
+            self._wait_reply("IRQ low")
+        else:
+            self.send_command("i")
+
+            self._wait_reply("IRQ high")
+
+    def nmi(self, state: bool) -> None:
+        if state:
+            self.send_command("N")
+
+            self._wait_reply("NMI low")
+        else:
+            self.send_command("n")
+
+            self._wait_reply("NMI high")
+
     def cycle(self) -> str:
         self.send_command('c')
         self.get_status()
