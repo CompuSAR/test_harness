@@ -85,7 +85,7 @@ def do_bus_op(plan: list[int]) -> None:
     if plan[1]:
         verify( status.read, msg="Invalid bus state: expected read, got write" )
     else:
-        verify( not tatus.read, msg="Invalid bus state: expected write, got read" )
+        verify( not status.read, msg="Invalid bus state: expected write, got read" )
 
     verify( status.address, array_to_number(plan[2:6]), msg="Bus access for wrong address" )
     verify( status.data, array_to_number(plan[6:8]), msg="Bus access with wrong value" )
@@ -148,7 +148,7 @@ for instruction in test_plan_file:
     elif instruction[1][0]==5:
         do_wait(instruction[1])
     elif instruction[1][0]==15:
-        print("{colored.fore.GREEN}Test ran to successful completion{colored.attr(0)}")
+        print(f"{colored.fore.GREEN}Test ran to successful completion{colored.attr(0)}")
         break
     else:
         assert False, f"Received invalid operation {instruction[1][0]} at line {test_plan_file.line_num}"
