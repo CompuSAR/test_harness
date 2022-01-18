@@ -4,6 +4,18 @@ import time
 
 from typing import Optional
 
+import colored
+
+
+class BusStatus:
+    def __init__(self, address: str, data: str, read: bool, flags: tuple[str]):
+        self.address = int(address, 16)
+        if data is not None:
+            self.data = int(data, 16)
+        self.read = read
+        self.write = not read
+        self.flags = [flag for flag in flags if flag]
+
 
 class TestHarness:
     """
@@ -40,7 +52,7 @@ class TestHarness:
         self.port.dtr = True
 
     def send_command(self, command_line: str) -> None:
-        print(f"> {command_line}")
+        print(f"{colored.fore.BLUE}> {command_line}{colored.attr(0)}")
         self.port.write(f"{command_line}\n".encode())
         echo = self.get_line()
         assert echo==command_line, "Mismatch between command sent and echo received"
@@ -82,36 +94,37 @@ class TestHarness:
         if state:
             self.send_command("R")
 
-            self._wait_reply("Reset LOW")
+            self._wait_reply("Reset \s LOW")
         else:
             self.send_command("r")
 
-            self._wait_reply("Reset HIGH")
+            self._wait_reply("Reset \s HIGH")
 
     def irq(self, state: bool) -> None:
         if state:
             self.send_command("I")
 
-            self._wait_reply("IRQ low")
+            self._wait_reply("IRQ \s low")
         else:
             self.send_command("i")
 
-            self._wait_reply("IRQ high")
+            self._wait_reply("IRQ \s high")
 
     def nmi(self, state: bool) -> None:
         if state:
             self.send_command("N")
 
-            self._wait_reply("NMI low")
+            self._wait_reply("NMI \s low")
         else:
             self.send_command("n")
 
-            self._wait_reply("NMI high")
+            self._wait_reply("NMI \s high")
 
-    def cycle(self) -> str:
+    def cycle(self) -> BusStatus:
         self.send_command('c')
         self.get_status()
-        self.get_status()
+        return self.get_status()
+
 
     def get_line(self) -> str:
         """
@@ -124,12 +137,13 @@ class TestHarness:
             raise serial.SerialTimeoutException()
 
         line = line.decode().rstrip('\r\n')
-        print(f"< {line}")
+        print(f"{colored.fore.LIGHT_YELLOW}< {line}{colored.attr(0)}")
 
         return line
 
-    def get_status(self) -> Optional[tuple]:
-        self._wait_reply(
+
+    def get_status(self) -> BusStatus:
+        parsed = self._wait_reply(
                 r'''
                 ^
                 (?P<cycle> [0-9]+) :\s
@@ -140,6 +154,13 @@ class TestHarness:
                 (?P<flags> .*)
                 $
                 ''')
+
+        return BusStatus(
+                parsed['address'],
+                parsed['data'],
+                parsed['read'] is not None,
+                parsed['flags'].split(' ') )
+
 
     def _wait_reply(self, expression: str) -> re.Match:
         while True:

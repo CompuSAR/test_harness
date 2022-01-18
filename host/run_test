@@ -7,11 +7,15 @@ import time
 from functools import partial
 
 
+import colored
+
+
 import assert_signal
 
 from deferred_actions import DeferredActions
-from mem_file import MemFile
+from mem_file import MemFile, array_to_number
 from test_harness import TestHarness
+
 
 parser = argparse.ArgumentParser(
         description="Run 6502 test plan on the test harness")
@@ -33,9 +37,31 @@ if args.port is None:
 test_harness = TestHarness(args.port)
 deferred_actions = DeferredActions()
 
+def verify(*args, msg: str) -> None:
+    if len(args)==1:
+        assert type(args[0]) is bool
+
+        if not args[0]:
+            raise RuntimeError(f"Verification failed at line {test_plan_file.line_num}: {msg}")
+    elif len(args)==2:
+        if not args[0]==args[1]:
+            raise RuntimeError(f"Verification failed at line {test_plan_file.line_num}: {msg}. Expected {args[0]:x}, got {args[1]:x}.")
+    else:
+        assert False, "Wrong number of arguments passed"
+
+
 def do_op(plan: list[int]) -> None:
 
 def do_bus_op(plan: list[int]) -> None:
+    status = test_harness.cycle()
+    if plan[1]:
+        verify( status.read, msg="Invalid bus state: expected read, got write" )
+    else:
+        verify( not tatus.read, msg="Invalid bus state: expected write, got read" )
+
+    verify( status.address, array_to_number(plan[2:6]), msg="Bus access for wrong address" )
+    verify( status.data, array_to_number(plan[6:8]), msg="Bus access with wrong value" )
+
 
 def do_assert_signal(plan: list[int]) -> None:
     assert_sig = assert_signal.AssertSignal(plan)
@@ -52,13 +78,25 @@ def do_assert_signal(plan: list[int]) -> None:
     else:
         assert False
 
+
 def do_wait(plan: list[int]) -> None:
+    cycles_to_wait = array_to_number( plan[1:5] )
+
+    while cycles_to_wait>0:
+        next_cycle()
+        cycles_to_wait -= 1
+
+
+def next_cycle() -> None:
+    deferred_actions.advance()
+    test_harness.cycle()
+
 
 mem_file = MemFile(args.memory_file, num_digits=2)
 
 for byte in mem_file:
     address = byte[0]
-    data = byte[1][0]*16 + byte[1][1]
+    data = array_to_number( byte[1][0:2] )
     test_harness.write_memory( address, data )
 
 mem_file = None
@@ -82,7 +120,7 @@ for instruction in test_plan_file:
     elif instruction[1][0]==5:
         do_wait(instruction[1])
     elif instruction[1][0]==15:
-        print("Test ran to successful completion")
+        print("{colored.fore.GREEN}Test ran to successful completion{colored.attr(0)}")
         break
     else:
         assert False, f"Received invalid operation {instruction[1][0]} at line {test_plan_file.line_num}"

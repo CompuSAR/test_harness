@@ -1,6 +1,14 @@
 import re
 
 
+def array_to_number(data: list[int]) -> int:
+    result = 0
+    for datum in data:
+        result *= 16
+        result += datum
+
+    return result
+
 class MemFile:
     """
     Reads and parses a Xilinx memory file.
