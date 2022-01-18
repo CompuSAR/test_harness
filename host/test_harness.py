@@ -14,7 +14,7 @@ class BusStatus:
             self.data = int(data, 16)
         self.read = read
         self.write = not read
-        self.flags = [flag for flag in flags if flag]
+        self.flags = set( [flag for flag in flags if flag] )
 
 
 class TestHarness:

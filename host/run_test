@@ -45,12 +45,40 @@ def verify(*args, msg: str) -> None:
             raise RuntimeError(f"Verification failed at line {test_plan_file.line_num}: {msg}")
     elif len(args)==2:
         if not args[0]==args[1]:
-            raise RuntimeError(f"Verification failed at line {test_plan_file.line_num}: {msg}. Expected {args[0]:x}, got {args[1]:x}.")
+            raise RuntimeError(f"Verification failed at line {test_plan_file.line_num}: {msg}. Expected {args[1]:x}, got {args[0]:x}.")
     else:
         assert False, "Wrong number of arguments passed"
 
 
 def do_op(plan: list[int]) -> None:
+    num_cycles = plan[1]
+    assert num_cycles>0, f"Num cycles in plan is too low: {num_cycles}"
+
+    status = next_cycle()
+    num_cycles -= 1
+
+    verify( "SYNC" in status.flags, msg="Command took longer than expected" )
+    verify( status.address, array_to_number(plan[4:8]), msg="Command read from wrong address" )
+    verify( status.data, array_to_number(plan[2:4]), msg="Command executes wrong opcode" )
+
+    while num_cycles>0:
+        status = next_cycle()
+        num_cycles -= 1
+
+        verify( "SYNC" not in status.flags, msg="Opcode shorter than expected" )
+
+    verify( status.address, array_to_number(plan[10:14]), msg="Opcode last bus access to wrong address" )
+    if plan[0]==0:
+        pass
+    elif plan[0]==1:
+        verify( status.read, msg="Opcode ended in write instead of read" )
+        verify( status.data, array_to_number(plan[8:10]), msg="Opcode read wrong value on last bus access" )
+    elif plan[0]==2:
+        verify( status.write, msg="Opcode ended in read instead of write" )
+        verify( status.data, array_to_number(plan[8:10]), msg="Opcode wrote wrong value on last bus access" )
+    else:
+        assert False, "Unknown operation type"
+
 
 def do_bus_op(plan: list[int]) -> None:
     status = test_harness.cycle()
@@ -89,7 +117,7 @@ def do_wait(plan: list[int]) -> None:
 
 def next_cycle() -> None:
     deferred_actions.advance()
-    test_harness.cycle()
+    return test_harness.cycle()
 
 
 mem_file = MemFile(args.memory_file, num_digits=2)
