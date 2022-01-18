@@ -129,7 +129,7 @@ void dumpBus() {
   if( !digitalRead(VectorPullBit) )
     printf(" VectorPull");
   if( !digitalRead(RMWBit) )
-    printf(" ReadModifyWrite");
+    printf(" MemoryLock");
 
   printf("\n");
 }
