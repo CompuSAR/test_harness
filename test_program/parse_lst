@@ -1,0 +1,55 @@
+#!/usr/bin/python3
+
+import argparse
+import re
+
+parser = argparse.ArgumentParser(description='Convert vasm list file to Xilinx .mem file')
+parser.add_argument('list_file', type=open, help="The list file to process")
+parser.add_argument('mem_file', type=argparse.FileType('w'), help="The memory file to write")
+
+args = parser.parse_args()
+
+parser = re.compile(
+        r'''
+        ^
+        (?P<SourceHeader> Source: \s "(?P<source_file> .*)" )
+        |
+        (?P<Data> \d\d: (?P<address> [0-9A-F]{4}) \s (?P<data> ([0-9A-F]{2})+) )
+            (?P<Source> \s+ (?P<source_line> \d+) : \s+ (?P<source> .*))?
+        $
+        ''',
+        re.VERBOSE)
+
+for line in args.list_file:
+    line = line.rstrip('\n')
+    match = parser.match(line)
+
+    if match is None:
+        continue
+
+    if match['SourceHeader']:
+        source_file = match['source_file']
+    elif match['Data']:
+        if source_file is None:
+            continue
+        line_out = ''
+        out_addr = int(match['address'], 16)
+        line_out = f"@{out_addr:04x}"
+
+        data_str = match['data']
+
+        while data_str:
+            data = int(data_str[:2], 16)
+            data_str = data_str[2:]
+
+            if line_out:
+                line_out += " "
+
+            line_out += f"{data:02x}"
+
+        if match['Source']:
+            assert len(line_out)<=40
+            line_out += ' '*( 40-len(line_out) )
+            line_out += f'// { source_file }:{ int(match["source_line"]) } { match["source"] }'
+
+        print(line_out, file=args.mem_file)
