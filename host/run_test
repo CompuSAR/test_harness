@@ -14,7 +14,8 @@ import assert_signal
 
 from deferred_actions import DeferredActions
 from mem_file import MemFile, array_to_number
-from test_harness import TestHarness
+from memory_mapped_io import MemoryMappedIo
+from test_harness import TestHarness, BusStatus
 
 
 parser = argparse.ArgumentParser(
@@ -36,6 +37,7 @@ if args.port is None:
 
 test_harness = TestHarness(args.port)
 deferred_actions = DeferredActions()
+memory_mapped_io = MemoryMappedIo(deferred_actions)
 
 def verify(*args, msg: str) -> None:
     if len(args)==1:
@@ -81,7 +83,7 @@ def do_op(plan: list[int]) -> None:
 
 
 def do_bus_op(plan: list[int]) -> None:
-    status = test_harness.cycle()
+    status = next_cycle()
     if plan[1]:
         verify( status.read, msg="Invalid bus state: expected read, got write" )
     else:
@@ -115,9 +117,14 @@ def do_wait(plan: list[int]) -> None:
         cycles_to_wait -= 1
 
 
-def next_cycle() -> None:
+def next_cycle() -> BusStatus:
     deferred_actions.advance()
-    return test_harness.cycle()
+    status = test_harness.cycle()
+
+    if (status.address & 0xff00)==0x0200:
+        memory_mapped_io.io(status)
+
+    return status
 
 
 mem_file = MemFile(args.memory_file, num_digits=2)
