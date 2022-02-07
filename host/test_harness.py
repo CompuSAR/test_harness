@@ -8,13 +8,14 @@ import colored
 
 
 class BusStatus:
-    def __init__(self, address: str, data: str, read: bool, flags: tuple[str]):
+    def __init__(self, address: str, data: str, read: bool, flags: tuple[str], opcode: Optional[str] = None):
         self.address = int(address, 16)
         if data is not None:
             self.data = int(data, 16)
         self.read = read
         self.write = not read
         self.flags = set( [flag for flag in flags if flag] )
+        self.opcode = opcode
 
 
 class TestHarness:
@@ -149,7 +150,7 @@ class TestHarness:
                 (?P<cycle> [0-9]+) :\s
                 A: (?P<address> [0-9a-fA-F]{4}) \s
                 D: ( (?P<data> [0-9a-fA-F]{2}) | -- ) \s
-                ( (?P<opcode> " [^"]+ ") \s )?
+                ( " (?P<opcode> [^"]+) " \s )?
                 ( (?P<read> Read) | (?P<write> Write) )
                 (?P<flags> .*)
                 $
@@ -159,7 +160,8 @@ class TestHarness:
                 parsed['address'],
                 parsed['data'],
                 parsed['read'] is not None,
-                parsed['flags'].split(' ') )
+                parsed['flags'].split(' '),
+                parsed['opcode'] )
 
 
     def _wait_reply(self, expression: str) -> re.Match:

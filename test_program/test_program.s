@@ -6,6 +6,7 @@ BRK      = %00100000
 OVERFLOW = %01000000
 NEGATIVE = %10000000
 
+FINISHED_TRIGGER        = $200
 NMI_TRIGGER_COUNT       = $2fa
 NMI_TRIGGER_DELAY       = $2fb
 RESET_TRIGGER_COUNT     = $2fc
@@ -25,7 +26,8 @@ start:
     nop
     lda #$03
     lda lda_zp_test     ; Make sure we don't treat the operand as an opcode
-    brk
+
+    sta FINISHED_TRIGGER
 
 reset_handler:
     ldx #$ff

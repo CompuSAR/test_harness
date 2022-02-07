@@ -1,0 +1,78 @@
+#!/usr/bin/python3
+
+import argparse
+import serial.tools.list_ports
+
+from deferred_actions import DeferredActions
+from mem_file import MemFile, array_to_number
+from memory_mapped_io import MemoryMappedIo
+from test_harness import TestHarness, BusStatus
+from test_plan_writer import TestPlanWriter
+
+
+parser = argparse.ArgumentParser(
+        description="Convert 6502 test program to test plan by running on the test harness")
+parser.add_argument('test_program', type=open, help="File describing initial memory layout")
+parser.add_argument('test_plan', type=argparse.FileType('w'), help="Test plan file to write")
+parser.add_argument('-p', '--port', help="The serial port to use. By default, use the first one located")
+
+
+args = parser.parse_args()
+
+if args.port is None:
+    comports = serial.tools.list_ports.comports()
+    if len(comports)==0:
+        exit_error("No serial ports found on system")
+
+    args.port = comports[0].device
+
+
+test_harness = TestHarness(args.port)
+deferred_actions = DeferredActions()
+memory_mapped_io = MemoryMappedIo(deferred_actions, test_harness)
+plan_writer = TestPlanWriter(args.test_plan)
+args.test_plan = None
+
+
+# Write test program to memory
+mem_file = MemFile(args.test_program, num_digits=2)
+
+for byte in mem_file:
+    address = byte[0]
+    data = array_to_number( byte[1][0:2] )
+    test_harness.write_memory( address, data )
+
+reset_cycles = 0
+test_harness.reset(True)
+
+while reset_cycles<5:
+    test_harness.cycle()
+    reset_cycles += 1
+
+test_harness.reset(False)
+
+while True:
+    status = test_harness.cycle()
+    if status.address==0xfffc:
+        break
+
+    reset_cycles += 1
+
+    assert reset_cycles<50, "Reset vector not reached after 50 cycles"
+
+plan_writer.wait(reset_cycles)
+
+# Start executing the test program
+def next_cycle() -> BusStatus:
+    deferred_actions.advance()
+    return test_harness.cycle()
+
+while True:
+    plan_writer.bus_op( status )
+    if (status.address & 0xff00)==0x0200:
+        memory_mapped_io.io(status)
+
+        if memory_mapped_io.finished:
+            break
+
+    status = next_cycle()
