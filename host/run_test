@@ -37,7 +37,7 @@ if args.port is None:
 
 test_harness = TestHarness(args.port)
 deferred_actions = DeferredActions()
-memory_mapped_io = MemoryMappedIo(deferred_actions)
+memory_mapped_io = MemoryMappedIo(deferred_actions, test_harness)
 
 def verify(*args, msg: str) -> None:
     if len(args)==1:
