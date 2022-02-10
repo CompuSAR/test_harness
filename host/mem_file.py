@@ -59,7 +59,7 @@ class MemFile:
 
                 parsed = regexp.match(line)
                 if parsed is None:
-                    raise RuntimeError(f'Failed to parse memory file {self._file_handle.name} at {self.line_num}:{self.col_num}')
+                    raise RuntimeError(f'Failed to parse memory file {str(self._file_handle)} at {self.line_num}:{self.col_num}')
 
                 line = line[ parsed.span()[1]: ]
                 self.col_num += parsed.span()[1]-1
