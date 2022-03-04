@@ -14,32 +14,55 @@ parser = re.compile(
         ^
         (?P<SourceHeader> Source: \s "(?P<source_file> .*)" )
         |
-        (?P<Data> \d\d: (?P<address> [0-9A-F]{4}) \s (?P<data> ([0-9A-F]{2})+) )
+        (?P<Data> \d+: (?P<address> [0-9A-F]{4}) \s (?P<data> ([0-9A-F]{2})+) )
             (?P<Source> \s+ (?P<source_line> \d+) : \s+ (?P<source> .*))?
+        |
+        (?P<Array> \d+: (?P<address_> [0-9A-F]{4}) \s \*)
         $
         ''',
         re.VERBOSE)
 
+last_match = None
+pending_array = None
 for line in args.list_file:
     line = line.rstrip('\n')
     match = parser.match(line)
 
     if match is None:
+        last_match = None
+        assert pending_array is None
         continue
 
     if match['SourceHeader']:
         source_file = match['source_file']
+        last_match = None
+        assert pending_array is None
     elif match['Data']:
         if source_file is None:
+            last_match = None
+            assert pending_array is None
             continue
-        line_out = ''
         out_addr = int(match['address'], 16)
+
+        if pending_array is not None:
+            assert len(pending_array[1]) == 1, "Multi-byte arrays not implemented"
+            line_out = ''
+            for addr in range( pending_array[0], out_addr ):
+                line_out += f"{pending_array[1][0]:02x} "
+
+            line += "  // Array"
+            print(line_out, file=args.mem_file)
+            pending_array = None
+
+        line_out = ''
         line_out = f"@{out_addr:04x}"
 
         data_str = match['data']
 
+        last_match = (out_addr, [])
         while data_str:
             data = int(data_str[:2], 16)
+            last_match[1].append(data)
             data_str = data_str[2:]
 
             if line_out:
@@ -53,3 +76,8 @@ for line in args.list_file:
             line_out += f'// { source_file }:{ int(match["source_line"]) } { match["source"] }'
 
         print(line_out, file=args.mem_file)
+    elif match['Array']:
+        assert last_match, "Got an array with no previous data line"
+        out_addr = int(match['address_'], 16)
+        assert out_addr==last_match[0]+len(last_match[1]), "Array address does not immediately follow previous address"
+        pending_array = (out_addr, last_match[1])

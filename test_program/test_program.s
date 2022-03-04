@@ -18,6 +18,10 @@ INT_TRIGGER_DELAY       = $2ff
     .org $00a9
 lda_zp_test: .byte $07
 
+    .org $0100
+    .dc $ff,$7a         ; Put stack in known state
+    .byte $7a           ; Due to a limitation of our lst parser, need to mark the end point
+
     .org $0300
 
 start:
