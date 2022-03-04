@@ -17,7 +17,7 @@ class TestPlanWriter:
 
         out_str = f"1_{status.address:04x}_{status.data:02x}_{binary_flags:02x}"
         if status.opcode:
-            out_str += f"    ; {status.opcode}"
+            out_str += f"    // {status.opcode}"
         print(out_str, file=self._output_file)
 
     def wait(self, num_cycles: int) -> None:
