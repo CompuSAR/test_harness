@@ -204,7 +204,7 @@ const struct { Operation op; AddressingMode mode; } opcodes[] = {
   {Operation::Op_AND, AddressingMode::Abs},
   {Operation::Op_ROL, AddressingMode::Abs},
   {Operation::Op_BBR, AddressingMode::Pc_rel},
-  {Operation::Op_JSR, AddressingMode::Abs},             // 30
+  {Operation::Op_BMI, AddressingMode::Pc_rel},             // 30
   {Operation::Op_AND, AddressingMode::Zp_x_ind},
   {Operation::Op_Unknown},
   {Operation::Op_Unknown},

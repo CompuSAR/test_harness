@@ -50,7 +50,7 @@ for line in args.list_file:
             for addr in range( pending_array[0], out_addr ):
                 line_out += f"{pending_array[1][0]:02x} "
 
-            line += "  // Array"
+            line_out += "  // Array"
             print(line_out, file=args.mem_file)
             pending_array = None
 
