@@ -14,10 +14,10 @@ parser = re.compile(
         ^
         (?P<SourceHeader> Source: \s "(?P<source_file> .*)" )
         |
-        (?P<Data> \d+: (?P<address> [0-9A-F]{4}) \s (?P<data> ([0-9A-F]{2})+) )
+        (?P<Data> [0-9A-F]+: (?P<address> [0-9A-F]{4}) \s (?P<data> ([0-9A-F]{2})+) )
             (?P<Source> \s+ (?P<source_line> \d+) : \s+ (?P<source> .*))?
         |
-        (?P<Array> \d+: (?P<address_> [0-9A-F]{4}) \s \*)
+        (?P<Array> [0-9A-F]+: (?P<address_> [0-9A-F]{4}) \s \*)
         $
         ''',
         re.VERBOSE)

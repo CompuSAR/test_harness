@@ -5,7 +5,7 @@ CPU=wdc
 BASEDIR=.
 
 ifeq "$(CPU)" "wdc"
-	CPU_OPTIONS:=-wdc02 -DCPU_WDC
+	CPU_OPTIONS:=-wdc02 -DCPU_WDC=1 -Dc02=1
 endif
 
 test_program_$(CPU).mem:
