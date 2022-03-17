@@ -25,7 +25,7 @@ class TestHarness:
     Parameters:
     port_path (str): The name of the serial port to which the test harness is connected.
     """
-    _BAUDRATE = 115200
+    _BAUDRATE = 1000000
     _TIMEOUT = 2
 
     def __init__(self, port_path: str):

@@ -52,7 +52,7 @@ void resetIo(IoState state) {
 }
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(1000000);
 
   pinMode(RwBit, OUTPUT);
   digitalWrite(RwBit, HIGH); // Disable write
