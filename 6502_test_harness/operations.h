@@ -349,7 +349,7 @@ const struct { Operation op; AddressingMode mode; } opcodes[] = {
   {Operation::Op_LDX, AddressingMode::Abs_y},
   {Operation::Op_BBS, AddressingMode::Pc_rel},
   {Operation::Op_CPY, AddressingMode::Immediate},       // c0
-  {Operation::Op_CMP, AddressingMode::Zp_x},
+  {Operation::Op_CMP, AddressingMode::Zp_x_ind},
   {Operation::Op_Unknown},
   {Operation::Op_Unknown},
   {Operation::Op_CPY, AddressingMode::Zp},
