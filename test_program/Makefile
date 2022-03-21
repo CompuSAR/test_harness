@@ -13,7 +13,7 @@ test_program_$(CPU).mem:
 -include *.dep
 
 %_$(CPU).lst: %.s
-	$(ASM) -dotdir $(CPU_OPTIONS) -dependall=make -depfile "$*_$(CPU).dep" -L "$*_$(CPU).lst" "$<" -o "$*_$(CPU).out"
+	$(ASM) -x -dotdir $(CPU_OPTIONS) -dependall=make -depfile "$*_$(CPU).dep" -L "$*_$(CPU).lst" "$<" -o "$*_$(CPU).out"
 	sed -i -e 's/$*_$(CPU)\.bin/\0 $*_$(CPU).lst/' "$*_$(CPU).dep"
 
 .PRECIOUS: %_$(CPU).lst
