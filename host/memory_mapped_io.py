@@ -1,4 +1,5 @@
 from typing import Callable
+from functools import partial
 
 from deferred_actions import DeferredActions
 
@@ -26,24 +27,24 @@ class MemoryMappedIo:
             self.nmi_count = status.data
             print(f"IO: Setting NMI cycle count register to {status.data}")
         elif address==0xfb:
-            self.deferred_actions( partial(self._activator(self.test_harness.nmi, self.nmi_count), status.data ) )
+            self.deferred_actions.add_action( partial(self._activator, self.test_harness.nmi, self.nmi_count), status.data )
         elif address==0xfc:
             self.reset_count = status.data
             print(f"IO: Setting reset cycle count register to {status.data}")
         elif address==0xfd:
-            self.deferred_actions( partial(self._activator(self.test_harness.reset, self.reset_count), status.data ) )
+            self.deferred_actions.add_action( partial(self._activator, self.test_harness.reset, self.reset_count), status.data )
         elif address==0xfe:
             self.irq_count = status.data
             print(f"IO: Setting IRQ cycle count register to {status.data}")
         elif address==0xff:
-            self.deferred_actions( partial(self._activator(self.test_harness.irq, self.irq_count), status.data ) )
+            self.deferred_actions.add_action( partial(self._activator, self.test_harness.irq, self.irq_count), status.data )
         else:
             print(f"Unknown IO {address:02x}")
 
     def _activator(self, action: Callable, off_timer: int) -> None:
-        action(self.test_harness, True)
+        action(True)
 
         self.deferred_actions.add_action( partial(self._deactivator, action), off_timer )
 
     def _deactivator(self, action: Callable) -> None:
-        action(self.test_harness, False)
+        action(False)
