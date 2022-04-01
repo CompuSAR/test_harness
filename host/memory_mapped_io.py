@@ -23,6 +23,16 @@ class MemoryMappedIo:
         if address==0x00:
             self.finished = True
             print("Test done triggered")
+        elif address==0x80:
+            self.ready_count = status.data
+            print(f"IO: Setting READY cycle count register to {status.data}")
+        elif address==0x81:
+            self.deferred_actions.add_action( partial(self._activator, self.test_harness.ready, self.ready_count), status.data )
+        elif address==0x82:
+            self.set_overflow_count = status.data
+            print(f"IO: Setting SO cycle count register to {status.data}")
+        elif address==0x83:
+            self.deferred_actions.add_action( partial(self._activator, self.test_harness.setOverflow, self.set_overflow_count), status.data )
         elif address==0xfa:
             self.nmi_count = status.data
             print(f"IO: Setting NMI cycle count register to {status.data}")

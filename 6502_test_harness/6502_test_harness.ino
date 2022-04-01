@@ -17,6 +17,7 @@ static const int BusEnableBit = 46;
 static const int RamEnableBit = 47;
 static const int ClockBit = 48;
 static const int ResetBit = 49;
+static const int SetOverflowBit = 50;
 static const int CpuPowerBit = 51;
 
 #include "operations.h"
@@ -70,6 +71,8 @@ void setup() {
 
   pinMode(ReadyOutBit, OUTPUT);
   digitalWrite(ReadyOutBit, HIGH);
+  pinMode(SetOverflowBit, OUTPUT);
+  digitalWrite(SetOverflowBit, HIGH);
   pinMode(NmiBit, OUTPUT);
   digitalWrite(NmiBit, HIGH);
   pinMode(IrqBit, OUTPUT);
@@ -146,6 +149,11 @@ void ready(int value) {
   digitalWrite(ReadyOutBit, value);
 }
 
+void setOverflow(int value) {
+  printf("Set overflow %s\n", value ? "HIGH" : "LOW");
+  digitalWrite(SetOverflowBit, value);
+}
+
 bool cpuState = false;
 void cpu(bool value) {
   printf("CPU power %s\n", value ? "on" : "off");
@@ -166,6 +174,8 @@ static const char HELP_MSG[] =
 "P/p        Power the CPU off(P) or on(p) - not connected\n"
 "R/r        Set reset line low(R) or high(r)\n"
 "s          Single step\n"
+"V/v        \"Set Overflow\" low(V) or high(v)\n"
+"W/w        Set Ready line low(W) or high(w)\n"
 "h/?        Print this message\n"
 ;
 
@@ -234,6 +244,18 @@ void loop() {
         halfAdvanceClock();
       } while( clockState==LOW || (++i<20 && !digitalRead(SyncBit)) );
     }
+    break;
+  case 'v':
+    setOverflow(HIGH);
+    break;
+  case 'V':
+    setOverflow(LOW);
+    break;
+  case 'w':
+    ready(HIGH);
+    break;
+  case 'W':
+    ready(LOW);
     break;
   case 'h': // Help
   case '?':

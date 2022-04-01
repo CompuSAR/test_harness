@@ -121,6 +121,26 @@ class TestHarness:
 
             self._wait_reply("NMI \s high")
 
+    def ready(self, state: bool) -> None:
+        if state:
+            self.send_command("W")
+
+            self._wait_reply("Ready \s LOW")
+        else:
+            self.send_command("w")
+
+            self._wait_reply("Ready \s HIGH")
+
+    def setOverflow(self, state: bool) -> None:
+        if state:
+            self.send_command("V")
+
+            self._wait_reply("Set \s overflow \s LOW")
+        else:
+            self.send_command("v")
+
+            self._wait_reply("Set \s overflow \s HIGH")
+
     def cycle(self) -> BusStatus:
         self.send_command('c')
         self.get_status()
