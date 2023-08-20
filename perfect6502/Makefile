@@ -1,5 +1,5 @@
 
-CXXFLAGS=-Wall -Wextra -std=c++20
+CXXFLAGS=-Wall -Wextra -std=c++20 -g
 CC=$(CXX)
 
 simulate_mos: simulate_mos.o readmem.o cpu/perfect6502.o cpu/netlist_sim.o
