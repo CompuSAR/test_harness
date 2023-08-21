@@ -1,3 +1,4 @@
 *.o
+*.mem
 
 /simulate_mos
