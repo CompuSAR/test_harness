@@ -128,8 +128,10 @@ ReadMemSupport::DataContainer ReadMemSupport::parse_hex_number() {
 
     bool valid = false;
     while( !_line.empty() && _line[0]!=' ' && _line[0]!='\t' ) {
-        if( _line[0]=='_' )
+        if( _line[0]=='_' ) {
+            _line = _line.subspan(1);
             continue;
+        }
 
         res <<= 4;
         res |= parse_hex_digit(_line[0]);

@@ -35,6 +35,10 @@ public:
         return _data;
     }
 
+    size_t lineNumber() const {
+        return _line_number;
+    }
+
     bool nextDatum(DataContainer &datum, size_t &address, std::string &comment);
     bool done() const {
         return _done;
@@ -86,6 +90,10 @@ public:
     }
     ReadMemSupport::DataContainer operator[](size_t index) const {
         return _fields.at(index);
+    }
+
+    size_t lineNumber() const {
+        return _base.lineNumber();
     }
 
 private:
