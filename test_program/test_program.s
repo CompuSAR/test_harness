@@ -52,7 +52,7 @@ rol_zp_test:    .byte $41, $9b, $60
 
     .org $005f
 eor_zp_test:
-                .byte $88, $70
+                .byte eor_test_zp_ref % 256, eor_test_zp_ref / 256
 
     .org $0066
 trb_zp_test:    .byte $75, $42
@@ -251,6 +251,11 @@ adc_loop:
     bne adc_loop
 
 sbc_loop:
+    stx value_dump
+    sty value_dump
+    sta value_dump
+    php
+
     sbc adc_abs_test
     pha
     php
@@ -456,8 +461,15 @@ dec_loop:
     eor (eor_zp_test)
     pha
     php
+    .else
+    eor eor_test_zp_ref
+    pha
+    php
     .endif
     eor (eor_zp_test),y
+    pha
+    php
+    eor #$3c
     pha
     php
 
@@ -1209,6 +1221,7 @@ lda_abs_test    .byte $74
                 .byte $08       ; lda abs,x
 
     .org $7088
+eor_test_zp_ref
                 .byte $29       ; eor (zp)
     .org $70aa
                 .byte $50       ; eor (zp),y
