@@ -111,6 +111,8 @@ start:
     lda lda_abs_test
     jsr flags_dump
 
+    jsr branch_boundary_test
+
     ldx #$c0
     ldy #$30
     .if C02
@@ -1105,6 +1107,36 @@ jmp_dest_mos:
 jmp_dest_mos_error:
     brk                 ; Should never reach here
 
+    .org $3630
+branch_boundary_test:
+    sec
+    bcs .1
+.2  clc
+    bcc .3
+.4  clv
+    bvc .5
+.7  .db $7f
+.6  lda #2
+    adc .7
+    bvs .8
+.9  bmi .10
+.11 bne .12
+.13 lda #0
+    beq .14
+.15 bpl .16
+.17 rts
+
+    .org $3682
+.1  bcs .2
+.3  bcc .4
+.5  bvc .6
+.8  bvs .9
+.10 bmi .11
+.12 bne .13
+.14 beq .15
+.16 bpl .17
+
+    .db $00
     .org $3787
 cmp_abs_test:
     .byte $b8

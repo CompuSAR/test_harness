@@ -17,7 +17,7 @@ static std::span<const char> open_and_map(std::filesystem::path path) {
     if( fstat(fd, &stat)==-1 )
         throw std::system_error( std::error_code(errno, std::system_category()), "Failed to stat MEM file" );
 
-    const char *mem = (const char *)mmap(nullptr, stat.st_size, PROT_READ, MAP_SHARED, fd, 0);
+    const char *mem = (const char *)mmap(nullptr, stat.st_size, PROT_READ, MAP_SHARED|MAP_POPULATE, fd, 0);
     if( mem==MAP_FAILED )
         throw std::system_error( std::error_code(errno, std::system_category()), "Mapping MEM file to memory failed" );
 
