@@ -26,6 +26,12 @@ struct ExtSignal {
 enum { ExtReady, ExtSo, ExtNmi, ExtReset, ExtIrq };
 ExtSignal signals[5];
 
+bool readSync(void *cpu_state) {
+    constexpr int sync = 539;
+
+    return isNodeHigh(cpu_state, sync);
+}
+
 void record_bus( void *cpu_state, std::ostream &logger, const char *comment ) {
     logger<<"1_";
 
@@ -36,12 +42,16 @@ void record_bus( void *cpu_state, std::ostream &logger, const char *comment ) {
     snprintf(buffer, 5, "%02x", readDataBus(cpu_state) );
     logger<<buffer<<"_";
 
+    uint8_t flags = 0;
     if( readRW(cpu_state) )
-        logger<<"01";
-    else
-        logger<<"00";
+        flags |= 0x01;
+    if( readSync(cpu_state) )
+        flags |= 0x02;
 
-    if( comment ) {
+    snprintf(buffer, 5, "%02x", flags);
+    logger<<buffer;
+
+    if( readSync(cpu_state) && comment ) {
         logger<<"\t\t// "<<comment;
     }
 
