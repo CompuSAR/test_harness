@@ -1125,6 +1125,7 @@ branch_boundary_test:
     beq .14
 .15 bpl .16
 .17 rts
+    .db $00
 
     .org $3682
 .1  bcs .2
@@ -1135,8 +1136,8 @@ branch_boundary_test:
 .12 bne .13
 .14 beq .15
 .16 bpl .17
-
     .db $00
+
     .org $3787
 cmp_abs_test:
     .byte $b8
