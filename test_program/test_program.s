@@ -55,7 +55,7 @@ eor_zp_test:
                 .byte eor_test_zp_ref % 256, eor_test_zp_ref / 256
 
     .org $0066
-trb_zp_test:    .byte $75, $42
+rb_zp_test:    .byte $75, $42
 tsb_zp_test:    .byte $a3
 
     .org $0069
@@ -79,6 +79,8 @@ lsr_zp_test:    .byte $7e
 
     .org $00a9
 lda_zp_test:    .word lda_indirect_test
+    .org $e9
+    .byte $ad
     .org $ec
 adc_zp_test:
     .byte $88, $d5, $13
@@ -1246,6 +1248,9 @@ inc_abs_test    .byte $fe, $30, $22, $48        ; inc abs, int abs,x tests
     .org $627a
                 .byte $01 ; dec abs,x test
 
+    .org $6c21
+                .byte $42
+
     .org $6d21
 lda_abs_test    .byte $74
     .org $6d51
@@ -1303,6 +1308,8 @@ jmp_dest1:
                 jmp (jmp_ind_test2)
                 brk             ; Unreachable
 
+    .org $ae28
+                .byte $20
     .org $ae38
 lda_indirect_test .byte $bf
     .org $ae68
