@@ -55,7 +55,7 @@ eor_zp_test:
                 .byte eor_test_zp_ref % 256, eor_test_zp_ref / 256
 
     .org $0066
-rb_zp_test:    .byte $75, $42
+trb_zp_test:    .byte $75, $42
 tsb_zp_test:    .byte $a3
 
     .org $0069

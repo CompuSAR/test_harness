@@ -53,7 +53,7 @@ class TestHarness:
         self.port.dtr = True
 
     def send_command(self, command_line: str) -> None:
-        print(f"{colored.fore.BLUE}> {command_line}{colored.attr(0)}")
+        print(f"{colored.fore('BLUE')}> {command_line}{colored.attr(0)}")
         self.port.write(f"{command_line}\n".encode())
         echo = self.get_line()
         assert echo==command_line, "Mismatch between command sent and echo received"
@@ -95,51 +95,51 @@ class TestHarness:
         if state:
             self.send_command("R")
 
-            self._wait_reply("Reset \s LOW")
+            self._wait_reply(r"Reset \s LOW")
         else:
             self.send_command("r")
 
-            self._wait_reply("Reset \s HIGH")
+            self._wait_reply(r"Reset \s HIGH")
 
     def irq(self, state: bool) -> None:
         if state:
             self.send_command("I")
 
-            self._wait_reply("IRQ \s low")
+            self._wait_reply(r"IRQ \s low")
         else:
             self.send_command("i")
 
-            self._wait_reply("IRQ \s high")
+            self._wait_reply(r"IRQ \s high")
 
     def nmi(self, state: bool) -> None:
         if state:
             self.send_command("N")
 
-            self._wait_reply("NMI \s low")
+            self._wait_reply(r"NMI \s low")
         else:
             self.send_command("n")
 
-            self._wait_reply("NMI \s high")
+            self._wait_reply(r"NMI \s high")
 
     def ready(self, state: bool) -> None:
         if state:
             self.send_command("W")
 
-            self._wait_reply("Ready \s LOW")
+            self._wait_reply(r"Ready \s LOW")
         else:
             self.send_command("w")
 
-            self._wait_reply("Ready \s HIGH")
+            self._wait_reply(r"Ready \s HIGH")
 
     def setOverflow(self, state: bool) -> None:
         if state:
             self.send_command("V")
 
-            self._wait_reply("Set \s overflow \s LOW")
+            self._wait_reply(r"Set \s overflow \s LOW")
         else:
             self.send_command("v")
 
-            self._wait_reply("Set \s overflow \s HIGH")
+            self._wait_reply(r"Set \s overflow \s HIGH")
 
     def cycle(self) -> BusStatus:
         self.send_command('c')
@@ -158,7 +158,7 @@ class TestHarness:
             raise serial.SerialTimeoutException()
 
         line = line.decode().rstrip('\r\n')
-        print(f"{colored.fore.LIGHT_YELLOW}< {line}{colored.attr(0)}")
+        print(f"{colored.fore('LIGHT_YELLOW')}< {line}{colored.attr(0)}")
 
         return line
 
