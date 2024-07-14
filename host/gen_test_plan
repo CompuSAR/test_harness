@@ -60,8 +60,6 @@ while True:
 
     assert reset_cycles<50, "Reset vector not reached after 50 cycles"
 
-plan_writer.wait(reset_cycles)
-
 # Start executing the test program
 def next_cycle() -> BusStatus:
     deferred_actions.advance()
