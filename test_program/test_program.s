@@ -423,6 +423,12 @@ sbc_loop:
     dec dec_zp_test,x
     php
 
+    ldx #$12
+    dec dec_abs_test,x
+    php
+
+    ldx #$a0
+
 dec_loop:
     .if C02
     dec
@@ -1239,8 +1245,14 @@ jmp_tests_c02:
     .org $5ee6
                 .byte $3f                       ; eor (zp,x) test
 
+    .org $617a
+                .byte $11 ; Shadow of dec abs,x test
+
     .org $61da
 dec_abs_test    .byte $7b
+
+    .org $61ec
+                .byte $90 ; Second dec abs,x test
 
     .org $61ff
 inc_abs_test    .byte $fe, $30, $22, $48        ; inc abs, int abs,x tests
