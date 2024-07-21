@@ -79,13 +79,14 @@ lsr_zp_test:    .byte $7e
 
     .org $00a9
 lda_zp_test:    .word lda_indirect_test
-    .org $e9
-    .byte $ad
-    .org $ec
+    .org $00e9
+                .byte $da       ; Shadow of $00a9
+
+    .org $00ec
 adc_zp_test:
     .byte $88, $d5, $13
 inc_zp_test:
-    .byte $c2
+    .byte $00c2
 
 cmp_zp_test:
     .byte $4f, $0a, $8f
@@ -1246,7 +1247,7 @@ jmp_tests_c02:
                 .byte $3f                       ; eor (zp,x) test
 
     .org $617a
-                .byte $11 ; Shadow of dec abs,x test
+                .byte $7d                       ; Shadow of $627a
 
     .org $61da
 dec_abs_test    .byte $7b
@@ -1261,7 +1262,7 @@ inc_abs_test    .byte $fe, $30, $22, $48        ; inc abs, int abs,x tests
                 .byte $01 ; dec abs,x test
 
     .org $6c21
-                .byte $42
+                .byte $a8       ; Shadow of $6d21
 
     .org $6d21
 lda_abs_test    .byte $74
@@ -1321,7 +1322,8 @@ jmp_dest1:
                 brk             ; Unreachable
 
     .org $ae28
-                .byte $20
+                .byte $2b       ; Shadow of $af28
+
     .org $ae38
 lda_indirect_test .byte $bf
     .org $ae68
@@ -1331,6 +1333,9 @@ lda_indirect_test .byte $bf
 
     .org $c213
     .byte $25                   ; adc (zp,x) test
+
+    .org $d014
+    .byte $01                   ; Shadow of $d114
 
     .org $d074
 eor_abs_test    .byte $17
