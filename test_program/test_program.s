@@ -1246,6 +1246,9 @@ jmp_tests_c02:
     .org $5ee6
                 .byte $3f                       ; eor (zp,x) test
 
+    .org $60ff
+                .byte $6d, $bc, $8e, $87        ; Shadow of 61ff
+
     .org $617a
                 .byte $7d                       ; Shadow of $627a
 
