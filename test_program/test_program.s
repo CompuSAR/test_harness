@@ -1119,6 +1119,9 @@ jmp_dest_mos:
 jmp_dest_mos_error:
     brk                 ; Should never reach here
 
+    .org $3331
+    .byte $a9, $f2, $fc, $ae ; Dummy read in zp indirect test
+
     .org $3630
 branch_boundary_test:
     sec
@@ -1231,7 +1234,11 @@ nmi_handler:
     jmp int_handler
     brk         ; Unreachable
 
-    .org $4694
+    .org $4614
+                .byte $ad                       ; Shadow of $4714 for sta_abs_test,x
+
+    .org $4693
+                .byte $bd                       ; Shadow of 4794 for sta_abs_test,y
 sta_abs_test:   .byte $87, $91, $20
 
     .org $55aa
