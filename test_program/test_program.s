@@ -1068,6 +1068,9 @@ bit_abs_test:
     .org $16aa
     .byte $03           ; bit abs,x
 
+    .org $1910
+    .byte $66           ; Shadow of 1a10
+
     .org $1a10
 ldx_abs_test:
     .byte $6d
