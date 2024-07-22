@@ -1290,6 +1290,9 @@ adc_abs_test:   .byte $65, $ca, $26, $6b
 trb_abs_test:   .byte $d7, $36
 tsb_abs_test:   .byte $a5, $00
 
+    .org $7e9d
+    .byte $98                   ; Shadow of 7f9d
+
     .org $7ea8
 lsr_abs_test:
     .byte $9b
