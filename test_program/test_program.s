@@ -191,135 +191,26 @@ asl_loop:
     jsr flags_dump
     bne asl_loop
 
-    ; ADC tests
-    ldx #2
-    ldy #1
-adc_loop:
-    adc adc_abs_test
-    pha
-    php
-    and adc_abs_test
-    pha
-    php
-    adc adc_abs_test,x
-    pha
-    php
-    and adc_abs_test,x
-    pha
-    php
-    adc adc_abs_test,y
-    pha
-    php
-    and adc_abs_test,y
-    pha
-    php
-    adc #$cd
-    pha
-    php
-    and #$a7
-    pha
-    php
-    adc adc_zp_test
-    pha
-    php
-    and adc_zp_test
-    pha
-    php
-    adc (adc_zp_test,x)
-    pha
-    php
-    and (adc_zp_test,x)
-    pha
-    php
-    adc adc_zp_test,x
-    pha
-    php
-    and adc_zp_test,x
-    pha
-    php
-    .if C02
-    adc (adc_zp_test)
-    pha
-    php
-    and (adc_zp_test)
-    pha
-    php
-    .endif
-    adc (adc_zp_test),y
-    pha
-    php
-    and (adc_zp_test),y
-    pha
-    php
-    iny
-    dex
-    bne adc_loop
+    sta sta_zp_test     ; Just somewhere to keep A's initial value
+    ldx #(adc_tests_ret1 & 0xff)
+    stx stored_ret
+    ldx #(adc_tests_ret1 >> 8)
+    stx stored_ret+1
 
-sbc_loop:
-    stx value_dump
-    sty value_dump
-    sta value_dump
-    php
+    jmp adc_tests
+adc_tests_ret1:
 
-    sbc adc_abs_test
-    pha
-    php
-    ora adc_abs_test
-    pha
-    php
-    sbc adc_abs_test,x
-    pha
-    php
-    ora adc_abs_test,x
-    pha
-    php
-    sbc adc_abs_test,y
-    pha
-    php
-    ora adc_abs_test,y
-    pha
-    php
-    sbc #$cd
-    pha
-    php
-    ora #$cd
-    pha
-    php
-    sbc adc_zp_test
-    pha
-    php
-    ora adc_zp_test
-    pha
-    php
-    sbc (adc_zp_test,x)
-    pha
-    php
-    ora (adc_zp_test,x)
-    pha
-    php
-    sbc adc_zp_test,x
-    pha
-    php
-    ora adc_zp_test,x
-    pha
-    php
-    .if C02
-    sbc (adc_zp_test)
-    pha
-    php
-    ora (adc_zp_test)
-    pha
-    php
-    .endif
-    sbc (adc_zp_test),y
-    pha
-    php
-    ora (adc_zp_test),y
-    pha
-    php
-    inx
-    dey
-    bne sbc_loop
+    sed
+    ldx #(adc_tests_ret2 & 0xff)
+    stx stored_ret
+    ldx #(adc_tests_ret2 >> 8)
+    stx stored_ret+1
+    lda sta_zp_test
+
+    jmp adc_tests
+adc_tests_ret2:
+    cld
+
 
     ; BIT test
     lda #$4f
@@ -1038,6 +929,142 @@ dump_state:
     sty value_dump
     plp
     rts
+
+    .org $0800
+adc_tests:
+    ; ADC tests
+    ldx #2
+    ldy #1
+adc_loop:
+    adc adc_abs_test
+    pha
+    php
+    and adc_abs_test
+    pha
+    php
+    adc adc_abs_test,x
+    pha
+    php
+    and adc_abs_test,x
+    pha
+    php
+    adc adc_abs_test,y
+    pha
+    php
+    and adc_abs_test,y
+    pha
+    php
+    adc #$cd
+    pha
+    php
+    and #$a7
+    pha
+    php
+    adc adc_zp_test
+    pha
+    php
+    and adc_zp_test
+    pha
+    php
+    adc (adc_zp_test,x)
+    pha
+    php
+    and (adc_zp_test,x)
+    pha
+    php
+    adc adc_zp_test,x
+    pha
+    php
+    and adc_zp_test,x
+    pha
+    php
+    .if C02
+    adc (adc_zp_test)
+    pha
+    php
+    and (adc_zp_test)
+    pha
+    php
+    .endif
+    adc (adc_zp_test),y
+    pha
+    php
+    and (adc_zp_test),y
+    pha
+    php
+    iny
+    dex
+    bne adc_loop
+
+sbc_loop:
+    stx value_dump
+    sty value_dump
+    sta value_dump
+    php
+
+    sbc adc_abs_test
+    pha
+    php
+    ora adc_abs_test
+    pha
+    php
+    sbc adc_abs_test,x
+    pha
+    php
+    ora adc_abs_test,x
+    pha
+    php
+    sbc adc_abs_test,y
+    pha
+    php
+    ora adc_abs_test,y
+    pha
+    php
+    sbc #$cd
+    pha
+    php
+    ora #$cd
+    pha
+    php
+    sbc adc_zp_test
+    pha
+    php
+    ora adc_zp_test
+    pha
+    php
+    sbc (adc_zp_test,x)
+    pha
+    php
+    ora (adc_zp_test,x)
+    pha
+    php
+    sbc adc_zp_test,x
+    pha
+    php
+    ora adc_zp_test,x
+    pha
+    php
+    .if C02
+    sbc (adc_zp_test)
+    pha
+    php
+    ora (adc_zp_test)
+    pha
+    php
+    .endif
+    sbc (adc_zp_test),y
+    pha
+    php
+    ora (adc_zp_test),y
+    pha
+    php
+    inx
+    dey
+    bne sbc_loop
+
+    jmp (stored_ret)
+
+stored_ret: dw 0
 
 reset_handler:
     ldx #$ff
