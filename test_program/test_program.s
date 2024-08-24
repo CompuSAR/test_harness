@@ -929,6 +929,7 @@ dump_state:
     sty value_dump
     plp
     rts
+    .db $22
 
     .org $0800
 adc_tests:
