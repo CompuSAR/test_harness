@@ -164,9 +164,7 @@ start:
     lda lda_abs_test,y          ; No page transition
     lda lda_abs_test-$30,y      ; With page transition
     lda lda_zp_test
-    .if C02
     lda (lda_zp_test+$100-$c0,x)
-    .endif
     lda lda_zp_test+$100-$c0,x
     .if C02
     lda (lda_zp_test)
